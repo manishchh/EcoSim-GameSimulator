@@ -21,6 +21,19 @@ class DirtTile(Tile):
         #grow plants;
         print("DirtTile")
 
+class Animal(GameObject):
+    def __init__(self, position: Vector2D, width: float, height: float, sourceImage: Img.Image, game: Game,speed:int, energy:int):
+        super().__init__(position, width, height, sourceImage, game)
+        self.speed = speed
+        self.energy = energy
+    
+    def update(self,timeElapsed):
+        self.energy -= timeElapsed
+        if self.energy <0:
+            self.destroy()
+        else:
+            print("moving")
+            #self.move_by(self.speed*timeElapsed, self.speed*timeElapsed)
 
 class EcoSim(Game):
     def __init__(self):
@@ -29,7 +42,7 @@ class EcoSim(Game):
 
     
 def main():
-    ImageLibrary.load('images')
+    ImageLibrary.load('images') 
     ecosim = EcoSim()
     tile = DirtTile(Vector2D(0,0), 96, 96, ImageLibrary.get('dirt_tile'), ecosim, 0,0,0)
     ecosim.run()
