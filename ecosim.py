@@ -1,4 +1,5 @@
 from game import *
+import random
 
 class Tile(GameObject):
     def __init__(self, position, width, height, sourceImage, game):
@@ -10,20 +11,25 @@ class Tile(GameObject):
 
 # from tile import *
 
-class DirtTile(Tile):
-    def __init__(self, position, width, height, sourceImage, game,gridPositionRow, GridPositionColumn, plant):
+class Dirt(Tile):
+    def __init__(self, position, width, height, sourceImage, game):
         super().__init__(position, width, height, sourceImage, game)
-        self.gridPositionRow = gridPositionRow
-        self.gridPositionColumn = GridPositionColumn
-        self.plant = plant
-
+      
+        
     def update(self, timeElapsed):
         #grow plants;
         print("DirtTile")
 
-class Animal(GameObject):
-    def __init__(self, position: Vector2D, width: float, height: float, sourceImage: Img.Image, game: Game,speed:int, energy:int):
+class Sand(Tile):
+    def __init__(self, position, width, height, sourceImage, game):
         super().__init__(position, width, height, sourceImage, game)
+
+
+class Animal(GameObject):
+    def __init__(self, position, width, height , sourceImage, game,speed, energy):
+        super().__init__(position, width, height, sourceImage, game)
+        self.target = Vector2D(random.randint(self.get_x()-20, self.get_x()+20), 
+        random.randint(self.get_y()-20, self.get_y()+20)) 
         self.speed = speed
         self.energy = energy
     
@@ -32,19 +38,40 @@ class Animal(GameObject):
         if self.energy <0:
             self.destroy()
         else:
-            print("moving")
-            #self.move_by(self.speed*timeElapsed, self.speed*timeElapsed)
+            trajectory = self.target.subtract(self.get_position())
+            trajectory = trajectory.normalize().scale(self.speed * timeElapsed)
+            self.move_by(trajectory.x, trajectory.y)
 
 class EcoSim(Game):
     def __init__(self):
         super().__init__()
-       
+        list_of_tiles = [Dirt, Sand]
+        dirtCount =0
+        # list_of_plants = [Grass, BlueBerryBush]
+        # list_of_animals = [Wombat, Snake]
+        for i in range(12):
+            for g in range(10):
+                random_list = random.choice(list_of_tiles)
+                if random_list == Dirt:
+                    tile = Dirt(Vector2D(i*64,g*64), 64, 64, ImageLibrary.get('dirt_tile'), self)
+                    dirtCount+=1
+                    
+                elif random_list == Sand:
+                    tile = Sand(Vector2D(i*64,g*64), 64, 64, ImageLibrary.get('sand_tile'), self)
+        dirtCount = dirtCount/2
+        for x in self.get_game_objs():
+            if isinstance(x,Dirt) and dirtCount>0: 
+                Animal(x.get_position(),64, 64, ImageLibrary.get('wombat1'), self, 10, 3)
+                dirtCount-=1
 
+
+        # self.animal = Animal(Vector2D(96, 96), 96, 96, ImageLibrary.get('wombat1'), self, 10, 3)
+    
+    
     
 def main():
     ImageLibrary.load('images') 
     ecosim = EcoSim()
-    tile = DirtTile(Vector2D(0,0), 96, 96, ImageLibrary.get('dirt_tile'), ecosim, 0,0,0)
     ecosim.run()
 
 if __name__ == '__main__':
