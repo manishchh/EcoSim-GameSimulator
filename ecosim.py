@@ -51,15 +51,21 @@ class Wombat(Animal):
     def update(self,timeElapsed):
 
         self.closestGrass = self.getClosestGrass()
-        self.target = self.closestGrass.get_position()
-        if self.checkIfTargetReached():
-            self.get_game()._remove_game_obj(self.closestGrass)
-            self.closestGrass = self.getClosestGrass()
+        if(self.closestGrass == None):
+            print("grass finsidhed")
+        else:
             self.target = self.closestGrass.get_position()
-        
-        trajectory = self.target.subtract(self.get_position())
-        trajectory = trajectory.normalize().scale(self.speed * timeElapsed)
-        self.move_by(trajectory.x, trajectory.y)
+            if self.checkIfTargetReached():
+                self.get_game()._remove_game_obj(self.closestGrass)
+                self.closestGrass = self.getClosestGrass()
+                if(self.closestGrass == None):
+                    return
+                else:  
+                    self.target = self.closestGrass.get_position()
+            
+            trajectory = self.target.subtract(self.get_position())
+            trajectory = trajectory.normalize().scale(self.speed * timeElapsed)
+            self.move_by(trajectory.x, trajectory.y)
 
     def checkIfTargetReached(self):
         currentDistance = self.get_position().distance(self.target)
@@ -74,12 +80,16 @@ class Wombat(Animal):
         gameObjects = self.get_game().get_game_objs()
         closestGrass = gameObjects[0]
         shortestDistance =  1000
+        grassExists = False
         for gameObject in gameObjects:
             if isinstance(gameObject,Grass):
+                grassExists =True
                 currentShortestDistance =  self.get_position().distance(gameObject.get_position())
                 if currentShortestDistance< shortestDistance:
                     shortestDistance = currentShortestDistance
                     closestGrass = gameObject
+        if grassExists!= True:
+            return None
         return closestGrass
 
 
@@ -98,6 +108,13 @@ class Plant(GameObject):
         super().__init__(position, width, height, sourceImage, game)
 
 class Grass(Plant):
+    def __init__(self, position, width, height , sourceImage, game):
+        super().__init__(position, width, height, sourceImage, game)
+
+    def update(self, seconds):
+        return super().update(seconds)
+
+class BerryBush(Plant):
     def __init__(self, position, width, height , sourceImage, game):
         super().__init__(position, width, height, sourceImage, game)
 
@@ -126,7 +143,7 @@ class EcoSim(Game):
                 Grass(x.get_position(),64, 64, ImageLibrary.get('grass_tuft'), self)
                 dirtCount-=1
 
-        Wombat(Vector2D(480, 0),48,48,ImageLibrary.get('wombat1'),self,50,300)
+        Wombat(Vector2D(640, 0),64,64,ImageLibrary.get('wombat1'),self,100,300)
 
         # self.animal = Animal(Vector2D(96, 96), 96, 96, ImageLibrary.get('wombat1'), self, 10, 3)
     
