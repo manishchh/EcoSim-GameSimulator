@@ -12,10 +12,16 @@ class Tile(GameObject):
 # from tile import *
 
 class Dirt(Tile):
-    def __init__(self, position, width, height, sourceImage, game):
+
+    def __init__(self, position, width, height, sourceImage, game,plant):
         super().__init__(position, width, height, sourceImage, game)
-      
-        
+        self.__plant = plant
+
+    def getPlant(self):
+        return self.__plant
+
+    def setPlant(self,plant):
+        self.__plant = plant
     def update(self, timeElapsed):
         #grow plants;
         print("DirtTile")
@@ -74,8 +80,6 @@ class Wombat(Animal):
         return False
 
     
-    
-
     def getClosestGrass(self):
         gameObjects = self.get_game().get_game_objs()
         closestGrass = gameObjects[0]
@@ -108,12 +112,29 @@ class Plant(GameObject):
         super().__init__(position, width, height, sourceImage, game)
 
 class Grass(Plant):
+    __lastUpdateTime =0
+    __grassRegenerationTime = 15
+    
     def __init__(self, position, width, height , sourceImage, game):
         super().__init__(position, width, height, sourceImage, game)
 
     def update(self, seconds):
-        return super().update(seconds)
+        super().update(seconds)
+        self.__lastUpdateTime+=seconds
+        if(self.__lastUpdateTime >=self.__grassRegenerationTime):
+            self.generateNewGrass()
+            self.__lastUpdateTime = 0
 
+    def generateNewGrass(self):
+        dirtTiles = self.get_game().getDirtTiles()
+        for x in dirtTiles:
+            distance = Vector2D.distance(self.get_position(),x.get_position())
+            if distance == 64 and x.getPlant()==None:
+                grass = Grass(x.get_position(),64,64,ImageLibrary.get("grass_tuft"),self.get_game())
+                x.setPlant(grass)
+                break
+                
+           
 class BerryBush(Plant):
     def __init__(self, position, width, height , sourceImage, game):
         super().__init__(position, width, height, sourceImage, game)
@@ -122,33 +143,41 @@ class BerryBush(Plant):
         return super().update(seconds)
 
 class EcoSim(Game):
+    __listOfDirtTiles =[]
+    __maxSandTiles = 55
     def __init__(self):
         super().__init__()
-        list_of_tiles = [Dirt, Sand]
-        dirtCount =0
-        # list_of_plants = [Grass, BlueBerryBush]
-        # list_of_animals = [Wombat, Snake]
+        sandCount =0
         for i in range(12):
             for j in range(10):
-                random_list = random.choice(list_of_tiles)
-                if random_list == Dirt:
-                    tile = Dirt(Vector2D(i*64,j*64), 64, 64, ImageLibrary.get('dirt_tile'), self)
-                    dirtCount+=1
-                    
+                random_list = random.choice([Dirt,Sand])
+                if random_list == Dirt or sandCount==self.__maxSandTiles:
+                    tile = Dirt(Vector2D(i*64,j*64), 64, 64, ImageLibrary.get('dirt_tile'), self,None)
+                    self.__listOfDirtTiles.append(tile)
                 elif random_list == Sand:
                     tile = Sand(Vector2D(i*64,j*64), 64, 64, ImageLibrary.get('sand_tile'), self)
-        dirtCount = dirtCount/2
-        for x in self.get_game_objs():
-            if isinstance(x,Dirt) and dirtCount>0: 
-                Grass(x.get_position(),64, 64, ImageLibrary.get('grass_tuft'), self)
-                dirtCount-=1
+                    sandCount+=1
+        self.generatePlants()
+    
+    def getDirtTiles(self):
+        return self.__listOfDirtTiles
 
-        Wombat(Vector2D(640, 0),64,64,ImageLibrary.get('wombat1'),self,100,300)
+    def generatePlants(self):
+        listDirtTiles = self.__listOfDirtTiles
+        maximumNumberOfPlants = len(listDirtTiles)/2
+        generatedNumberOfPlants =0
+        while generatedNumberOfPlants < maximumNumberOfPlants:
+            randomDirtTile = random.choice(listDirtTiles)
+            if randomDirtTile.getPlant()==None:
+                generatedNumberOfPlants+=1
+                plantType = random.choice([Grass,BerryBush])
+                if(plantType == Grass):
+                    grass = Grass(randomDirtTile.get_position(),64,64,ImageLibrary.get('grass_tuft'),self)
+                    randomDirtTile.setPlant(grass)
+                else:
+                    berry = BerryBush(randomDirtTile.get_position(),64,64,ImageLibrary.get('blueberry_bush'),self)
+                    randomDirtTile.setPlant(berry)
 
-        # self.animal = Animal(Vector2D(96, 96), 96, 96, ImageLibrary.get('wombat1'), self, 10, 3)
-    
-    
-    
 def main():
     ImageLibrary.load('images') 
     ecosim = EcoSim()
