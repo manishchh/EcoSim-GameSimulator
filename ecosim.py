@@ -23,10 +23,28 @@ class EcoSim(Game):
                     tile = Sand(Vector2D(i*64,j*64), 64, 64, ImageLibrary.get('sand_tile'), self)
                     sandCount+=1
         self.generatePlants()
-        wombat = Wombat(Vector2D(128,128),64,64,ImageLibrary.get('wombat1'),self,30,100)
+        self.generateWombats()
     
     def getDirtTiles(self):
         return self.__listOfDirtTiles
+
+    def generateWombats(self):
+        generatedPositions = []
+        x =0
+        while x !=8:
+            randomXCoordinate = random.randint(0,11)*64
+            randomYCoordinate = random.randint(0,9)*64
+            if self.checkPositionExistsInArray(generatedPositions,Vector2D(randomXCoordinate,randomYCoordinate)) == False:
+                wombat = Wombat(Vector2D(randomXCoordinate,randomYCoordinate),64,64,ImageLibrary.get('wombat1'),self,20,15)
+                generatedPositions.append(Vector2D(randomXCoordinate,randomYCoordinate))
+                x+=1
+    
+    def checkPositionExistsInArray(self,array, position):
+        for item in array:
+            exists = item.x == position.x and item.y == position.y
+            if exists:
+                return True
+        return False
 
     def generatePlants(self):
         listDirtTiles = self.__listOfDirtTiles
