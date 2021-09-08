@@ -1,4 +1,4 @@
-
+from animals.snake import Snake
 from animals.wombat import Wombat
 from tiles.dirtTile import Dirt
 from tiles.sandTile import Sand
@@ -9,7 +9,7 @@ import random
 
 class EcoSim(Game):
     __listOfDirtTiles =[]
-    __maxSandTiles = 55
+    __maxSandTiles = 40
     def __init__(self):
         super().__init__()
         sandCount =0
@@ -24,6 +24,7 @@ class EcoSim(Game):
                     sandCount+=1
         self.generatePlants()
         self.generateWombats()
+        self.generateSnakes()
     
     def getDirtTiles(self):
         return self.__listOfDirtTiles
@@ -39,6 +40,17 @@ class EcoSim(Game):
                 generatedPositions.append(Vector2D(randomXCoordinate,randomYCoordinate))
                 x+=1
     
+    def generateSnakes(self):
+        generatedPositions = []
+        x =0
+        while x !=3:
+            randomXCoordinate = random.randint(0,11)*64
+            randomYCoordinate = random.randint(0,9)*64
+            if self.checkPositionExistsInArray(generatedPositions,Vector2D(randomXCoordinate,randomYCoordinate)) == False:
+                snake = Snake(Vector2D(randomXCoordinate,randomYCoordinate),64,64,ImageLibrary.get('snake1'),self,20,25)
+                generatedPositions.append(Vector2D(randomXCoordinate,randomYCoordinate))
+                x+=1
+
     def checkPositionExistsInArray(self,array, position):
         for item in array:
             exists = item.x == position.x and item.y == position.y
