@@ -5,7 +5,7 @@ from plants.plant import Plant
 
 class Grass(Plant):
     __lastUpdateTime =0
-    __grassRegenerationTime = 15
+    __grassRegenerationTime = 10
     
     def __init__(self, position, width, height , sourceImage, game):
         super().__init__(position, width, height, sourceImage, game)
