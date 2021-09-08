@@ -1,46 +1,35 @@
 from random import randint
-from animals.animal import Animal
+from animals.animal import Animal, OutOfBoundException
 from game import Vector2D
 from plants.grass import Grass
-
-class OutOfBoundException(Exception):
-    """Base class for other exceptions"""
-    pass
 
 class Wombat(Animal):
     target= Vector2D(46,46)
 
     def __init__(self, position, width, height , sourceImage, game,speed, energy):
         super().__init__(position, width, height, sourceImage, game,speed,energy)
-        self._maxEnergy=energy
-
-    def restoreEnergy(self,energyIncrementValue):
-        if(self.energy + energyIncrementValue <= self._maxEnergy):
-            self.energy += energyIncrementValue
-
-    def reduceEnergy(self,timeElapsed):
-        self.energy -= timeElapsed
-        if self.energy<=0:
-            self.destroy()       
+        self._energyIncrementValue = 10
 
     def update(self,timeElapsed):
-        if(self.isHungry()):
+        self._lifeSpan += timeElapsed
+
+        if(self._lifeSpan >=18):
+            self.breedNewWombat()
+        self.closestDirtTileWithGrass = self.getClosestDirTileWithGrass()
+        if(self.isHungry() and self.closestDirtTileWithGrass!=None):
             print("wombat Hungry")
             self.closestDirtTileWithGrass = self.getClosestDirTileWithGrass()
-            if(self.closestDirtTileWithGrass == None):
-                print("grass finsidhed")
-            else:
-                self.target = self.closestDirtTileWithGrass.getPlant().get_position()
-                if self.checkIfTargetReached():
-                    print("closest grass reached")
-                    self.get_game()._remove_game_obj(self.closestDirtTileWithGrass.getPlant())
-                    #self.closestDirtTileWithGrass = self.getClosestDirTileWithGrass()
-                    self.restoreEnergy(10)
-                    if(self.closestDirtTileWithGrass == None):
-                        return
-                    else:  
-                        #self.target = self.closestDirtTileWithGrass.getPlant().get_position()
-                        self.closestDirtTileWithGrass.setPlant(None) 
+            self.target = self.closestDirtTileWithGrass.getPlant().get_position()
+            if self.checkIfTargetReached():
+                print("closest grass reached")
+                self.get_game()._remove_game_obj(self.closestDirtTileWithGrass.getPlant())
+                #self.closestDirtTileWithGrass = self.getClosestDirTileWithGrass()
+                self.restoreEnergy()
+                if(self.closestDirtTileWithGrass == None):
+                    return
+                else:  
+                    #self.target = self.closestDirtTileWithGrass.getPlant().get_position()
+                    self.closestDirtTileWithGrass.setPlant(None) 
         else:
             try:
                 if self.checkIfTargetReached():
@@ -57,6 +46,13 @@ class Wombat(Animal):
         self.reduceEnergy(timeElapsed)
 
 
+    def breedNewWombat(self):
+        position = self.get_position()
+        x = int(position.x)
+        y = int(position.y)
+        Wombat(Vector2D(x,y),64,64,self.get_image(),self.get_game(),20,15)
+        self._lifeSpan=0
+
     def checkIfTargetReached(self):
         currentDistance = self.get_position().distance(self.target)
         if(currentDistance<32):
@@ -64,26 +60,6 @@ class Wombat(Animal):
             return True
         return False
 
-    def isHungry(self):
-        return self.energy<int(self._maxEnergy/2)
-    
-    def getRandomLocation(self):
-        maxXWindowCoOrdinate = int(1152/64) -1
-        maxYWindowCoOrdinate = int(984/64) -1
-        randomX = randint(0,maxXWindowCoOrdinate)
-        randomY = randint(0,maxYWindowCoOrdinate)
-        return Vector2D(randomX*64,randomY*64)
-
-    def isOutsideBound(self,vector2D):
-        return vector2D.x > (64*12)  or vector2D.y > (640)
-
-    def getRandomValidLocation(self):
-        maxXWindowCoOrdinate = 11
-        maxYWindowCoOrdinate = 9
-        randomX = randint(0,maxXWindowCoOrdinate)
-        randomY = randint(0,maxYWindowCoOrdinate)
-        return Vector2D(randomX*64,randomY*64)
-    
     def getClosestDirTileWithGrass(self):
         dirtTiles = self.get_game().getDirtTiles()
         closestDirtTileWithGrass = None
